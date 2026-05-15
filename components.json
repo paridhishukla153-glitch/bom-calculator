@@ -1,0 +1,48 @@
+[
+    {
+        "name": "1k Resistor",
+        "category": "Resistor",
+        "unit_price_inr": 2,
+        "package": "Through Hole",
+        "description": "1k ohm resistor"
+    },
+
+    {
+        "name": "10uF Capacitor",
+        "category": "Capacitor",
+        "unit_price_inr": 5,
+        "package": "Electrolytic",
+        "description": "10 microfarad capacitor"
+    },
+
+    {
+        "name": "555 Timer IC",
+        "category": "IC",
+        "unit_price_inr": 25,
+        "package": "DIP-8",
+        "description": "Timer IC"
+    },
+
+    {
+        "name": "Red LED",
+        "category": "LED",
+        "unit_price_inr": 3,
+        "package": "5mm",
+        "description": "Red color LED"
+    },
+
+    {
+        "name": "BC547 Transistor",
+        "category": "Transistor",
+        "unit_price_inr": 8,
+        "package": "TO-92",
+        "description": "NPN transistor"
+    },
+{
+    "name": "Arduino Nano",
+    "category": "Microcontroller",
+    "unit_price_inr": 350,
+    "package": "Board",
+    "description": "ATmega328P development board"
+}
+]

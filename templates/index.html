@@ -1,11 +1,40 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>BOM Calculator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
 </head>
+
 <body>
 
-    <h1>My BOM Calculator</h1>
+    <h1>Electronic Components</h1>
+
+    <table border="1">
+
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price (₹)</th>
+            <th>Package</th>
+            <th>Description</th>
+        </tr>
+
+        {% for component in components %}
+
+        <tr>
+            <td>{{ component.name }}</td>
+            <td>{{ component.category }}</td>
+            <td>{{ component.unit_price_inr }}</td>
+            <td>{{ component.package }}</td>
+            <td>{{ component.description }}</td>
+        </tr>
+
+        {% endfor %}
+
+    </table>
 
 </body>
+
 </html>
