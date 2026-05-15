@@ -5,7 +5,8 @@
 
     <title>BOM Calculator</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
 </head>
 
@@ -15,7 +16,12 @@
 
     <div class="form-section">
 
-        <label>Select Component:</label>
+        <input type="text"
+               id="searchBox"
+               placeholder="Search component..."
+               onkeyup="filterComponents()">
+
+        <br><br>
 
         <select id="componentSelect">
 
@@ -33,11 +39,14 @@
 
         </select>
 
-        <label>Quantity:</label>
+        <input type="number"
+               id="quantity"
+               min="1"
+               placeholder="Quantity">
 
-        <input type="number" id="quantity" min="1">
-
-        <button onclick="addToBOM()">Add to BOM</button>
+        <button onclick="addToBOM()">
+            Add to BOM
+        </button>
 
     </div>
 
@@ -47,8 +56,8 @@
 
         <tr>
             <th>Component</th>
-            <th>Unit Price</th>
-            <th>Quantity</th>
+            <th>Price</th>
+            <th>Qty</th>
             <th>Total</th>
             <th>Action</th>
         </tr>
@@ -56,6 +65,57 @@
     </table>
 
     <h2 id="grandTotal">Grand Total: ₹0</h2>
+
+    <div class="form-section">
+
+        <h3>Profit Margin Calculator</h3>
+
+        <input type="number"
+               id="marginPercent"
+               placeholder="Margin %"
+               oninput="calculateSellingPrice()">
+
+        <h3 id="sellingPrice">
+            Selling Price: ₹0
+        </h3>
+
+    </div>
+
+    <div class="form-section">
+
+        <h3>Save Project</h3>
+
+        <input type="text"
+               id="projectName"
+               placeholder="Project Name">
+
+        <button onclick="saveBOM()">
+            Save BOM
+        </button>
+
+    </div>
+
+    <div class="form-section">
+
+        <h3>Load Saved BOM</h3>
+
+        <select id="savedProjects">
+
+            {% for file in saved_files %}
+
+            <option value="{{ file }}">
+                {{ file }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+        <button onclick="loadBOM()">
+            Load BOM
+        </button>
+
+    </div>
 
     <button onclick="generatePDF()">
         Generate PDF Report
@@ -69,15 +129,20 @@
 
         function addToBOM() {
 
-            let dropdown = document.getElementById("componentSelect");
+            let dropdown =
+                document.getElementById("componentSelect");
 
-            let selectedOption = dropdown.options[dropdown.selectedIndex];
+            let selectedOption =
+                dropdown.options[dropdown.selectedIndex];
 
-            let componentName = selectedOption.dataset.name;
+            let componentName =
+                selectedOption.dataset.name;
 
-            let unitPrice = parseFloat(selectedOption.value);
+            let unitPrice =
+                parseFloat(selectedOption.value);
 
-            let quantity = parseInt(document.getElementById("quantity").value);
+            let quantity =
+                parseInt(document.getElementById("quantity").value);
 
             if (!quantity || quantity <= 0) {
 
@@ -90,10 +155,10 @@
 
             grandTotal += total;
 
-            document.getElementById("grandTotal").innerText =
-                "Grand Total: ₹" + grandTotal;
+            updateGrandTotal();
 
-            let table = document.getElementById("bomTable");
+            let table =
+                document.getElementById("bomTable");
 
             let row = table.insertRow();
 
@@ -124,8 +189,31 @@
 
             grandTotal -= total;
 
+            updateGrandTotal();
+        }
+
+        function updateGrandTotal() {
+
             document.getElementById("grandTotal").innerText =
                 "Grand Total: ₹" + grandTotal;
+
+            calculateSellingPrice();
+        }
+
+        function calculateSellingPrice() {
+
+            let margin =
+                parseFloat(
+                    document.getElementById("marginPercent").value
+                );
+
+            if (!margin) margin = 0;
+
+            let sellingPrice =
+                grandTotal + (grandTotal * margin / 100);
+
+            document.getElementById("sellingPrice").innerText =
+                "Selling Price: ₹" + sellingPrice.toFixed(2);
         }
 
         async function generatePDF() {
@@ -152,6 +240,70 @@
             a.download = "BOM_Report.pdf";
 
             a.click();
+        }
+
+        async function saveBOM() {
+
+            let projectName =
+                document.getElementById("projectName").value;
+
+            if (!projectName) {
+
+                alert("Enter project name");
+
+                return;
+            }
+
+            await fetch("/save_bom", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    project_name: projectName,
+                    bom_items: bomItems
+                })
+            });
+
+            alert("Project Saved");
+        }
+
+        async function loadBOM() {
+
+            let filename =
+                document.getElementById("savedProjects").value;
+
+            const response =
+                await fetch(`/load_bom/${filename}`);
+
+            const data = await response.json();
+
+            location.reload();
+        }
+
+        function filterComponents() {
+
+            let input =
+                document.getElementById("searchBox")
+                .value
+                .toLowerCase();
+
+            let select =
+                document.getElementById("componentSelect");
+
+            let options = select.options;
+
+            for (let i = 0; i < options.length; i++) {
+
+                let text =
+                    options[i].text.toLowerCase();
+
+                options[i].style.display =
+                    text.includes(input) ? "" : "none";
+            }
         }
 
     </script>

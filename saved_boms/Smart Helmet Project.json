@@ -1,0 +1,22 @@
+[
+    {
+        "name": "555 Timer IC",
+        "unit_price": 25,
+        "quantity": 2
+    },
+    {
+        "name": "BC547 Transistor",
+        "unit_price": 8,
+        "quantity": 2
+    },
+    {
+        "name": "Arduino Nano",
+        "unit_price": 350,
+        "quantity": 2
+    },
+    {
+        "name": "Arduino Nano",
+        "unit_price": 350,
+        "quantity": 20
+    }
+]

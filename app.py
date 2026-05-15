@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 import json
+import os
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus.flowables import PageBreak
 from reportlab.lib.pagesizes import letter
 from datetime import datetime
 
@@ -15,7 +15,13 @@ def home():
     with open("components.json", "r") as file:
         components = json.load(file)
 
-    return render_template("index.html", components=components)
+    saved_files = os.listdir("saved_boms")
+
+    return render_template(
+        "index.html",
+        components=components,
+        saved_files=saved_files
+    )
 
 
 @app.route("/generate_pdf", methods=["POST"])
@@ -35,32 +41,23 @@ def generate_pdf():
 
     elements.append(title)
 
-    date = Paragraph(
-        f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M')}",
-        styles['Normal']
-    )
-
-    elements.append(date)
-
     elements.append(Spacer(1, 20))
 
-    table_data = [
-        ["Component", "Unit Price", "Quantity", "Total"]
-    ]
+    table_data = [["Component", "Unit Price", "Qty", "Total"]]
 
     grand_total = 0
 
     for item in bom_data:
 
-        row_total = item["unit_price"] * item["quantity"]
+        total = item["unit_price"] * item["quantity"]
 
-        grand_total += row_total
+        grand_total += total
 
         table_data.append([
             item["name"],
             f"₹{item['unit_price']}",
             item["quantity"],
-            f"₹{row_total}"
+            f"₹{total}"
         ])
 
     gst = grand_total * 0.18
@@ -68,10 +65,8 @@ def generate_pdf():
     final_total = grand_total + gst
 
     table_data.append(["", "", "Subtotal", f"₹{grand_total}"])
-
-    table_data.append(["", "", "GST (18%)", f"₹{gst:.2f}"])
-
-    table_data.append(["", "", "Final Total", f"₹{final_total:.2f}"])
+    table_data.append(["", "", "GST", f"₹{gst:.2f}"])
+    table_data.append(["", "", "Final", f"₹{final_total:.2f}"])
 
     table = Table(table_data)
 
@@ -81,11 +76,7 @@ def generate_pdf():
 
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
 
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
 
     ]))
 
@@ -94,6 +85,36 @@ def generate_pdf():
     doc.build(elements)
 
     return send_file(pdf_file, as_attachment=True)
+
+
+@app.route("/save_bom", methods=["POST"])
+def save_bom():
+
+    data = request.json
+
+    project_name = data["project_name"]
+
+    bom_items = data["bom_items"]
+
+    file_path = f"saved_boms/{project_name}.json"
+
+    with open(file_path, "w") as file:
+
+        json.dump(bom_items, file, indent=4)
+
+    return jsonify({"message": "Saved Successfully"})
+
+
+@app.route("/load_bom/<filename>")
+def load_bom(filename):
+
+    file_path = f"saved_boms/{filename}"
+
+    with open(file_path, "r") as file:
+
+        data = json.load(file)
+
+    return jsonify(data)
 
 
 if __name__ == "__main__":
