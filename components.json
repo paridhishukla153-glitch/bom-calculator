@@ -44,5 +44,16 @@
     "unit_price_inr": 350,
     "package": "Board",
     "description": "ATmega328P development board"
+},
+
+{
+  "name": "ESP32 Dev Board",
+  "category": "Microcontroller",
+  "unit_price_inr": 450,
+  "package": "Board",
+  "description": "WiFi + Bluetooth MCU",
+  "manufacturer": "Espressif",
+  "voltage": "3.3V"
 }
+
 ]

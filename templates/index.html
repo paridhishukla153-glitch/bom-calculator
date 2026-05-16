@@ -315,15 +315,71 @@
         alert("Project Saved");
     }
 
+
     async function loadBOM() {
 
-        let filename =
-            document.getElementById("savedProjects").value;
+    let filename =
+        document.getElementById("savedProjects").value;
 
+    const response =
         await fetch(`/load_bom/${filename}`);
 
-        location.reload();
-    }
+    const data = await response.json();
+
+    document.getElementById("bomTable").innerHTML = `
+        <tr>
+            <th>Component</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Action</th>
+        </tr>
+    `;
+
+    bomItems = [];
+
+    grandTotal = 0;
+
+    highestCost = 0;
+
+    highestItemName = "None";
+
+    data.forEach(item => {
+
+        let total =
+            item.unit_price * item.quantity;
+
+        grandTotal += total;
+
+        if (total > highestCost) {
+
+            highestCost = total;
+
+            highestItemName = item.name;
+        }
+
+        bomItems.push(item);
+
+        let table =
+            document.getElementById("bomTable");
+
+        let row = table.insertRow();
+
+        row.innerHTML = `
+            <td>${item.name}</td>
+            <td>₹${item.unit_price}</td>
+            <td>${item.quantity}</td>
+            <td>₹${total}</td>
+            <td>
+                <button onclick="removeRow(this, ${total})">
+                    Remove
+                </button>
+            </td>
+        `;
+    });
+
+    updateGrandTotal();
+}
 
     function filterComponents() {
 
