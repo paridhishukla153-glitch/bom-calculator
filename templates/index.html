@@ -142,7 +142,6 @@
 
     <script>
 
-
     let grandTotal = 0;
 
     let bomItems = [];
@@ -151,203 +150,204 @@
 
     let highestItemName = "None";
 
-        function addToBOM() {
+    function addToBOM() {
 
-            let dropdown =
-                document.getElementById("componentSelect");
+        let dropdown =
+            document.getElementById("componentSelect");
 
-            let selectedOption =
-                dropdown.options[dropdown.selectedIndex];
+        let selectedOption =
+            dropdown.options[dropdown.selectedIndex];
 
-            let componentName =
-                selectedOption.dataset.name;
+        let componentName =
+            selectedOption.dataset.name;
 
-            let unitPrice =
-                parseFloat(selectedOption.value);
+        let unitPrice =
+            parseFloat(selectedOption.value);
 
-            let quantity =
-                parseInt(document.getElementById("quantity").value);
+        let quantity =
+            parseInt(document.getElementById("quantity").value);
 
-            if (!quantity || quantity <= 0) {
+        if (!quantity || quantity <= 0) {
 
-                alert("quantity must be greater than 0");
+            alert("Quantity must be greater than 0");
 
-                return;
-            }
-
-            let total = unitPrice * quantity;
-
-            if (total > highestCost) {
-
-    highestCost = total;
-
-    highestItemName = componentName;
-}
-
-            updateGrandTotal();
-
-            let table =
-                document.getElementById("bomTable");
-
-            let row = table.insertRow();
-
-            row.innerHTML = `
-                <td>${componentName}</td>
-                <td>₹${unitPrice}</td>
-                <td>${quantity}</td>
-                <td>₹${total}</td>
-                <td>
-                    <button onclick="removeRow(this, ${total})">
-                        Remove
-                    </button>
-                </td>
-            `;
-
-            bomItems.push({
-                name: componentName,
-                unit_price: unitPrice,
-                quantity: quantity
-            });
+            return;
         }
 
-        function removeRow(button, total) {
+        let total = unitPrice * quantity;
 
-            let row = button.parentNode.parentNode;
+        grandTotal += total;
 
-            row.remove();
+        if (total > highestCost) {
 
-            grandTotal -= total;
+            highestCost = total;
 
-            updateGrandTotal();
+            highestItemName = componentName;
         }
 
-        function updateGrandTotal() {
-function updateGrandTotal() {
+        bomItems.push({
 
-    document.getElementById("grandTotal").innerText =
-        "Grand Total: ₹" + grandTotal;
+            name: componentName,
 
-    document.getElementById("dashboardTotal").innerText =
-        "₹" + grandTotal;
+            unit_price: unitPrice,
 
-    document.getElementById("componentCount").innerText =
-        bomItems.length;
+            quantity: quantity
+        });
 
-    document.getElementById("highestItem").innerText =
-        highestItemName;
+        updateGrandTotal();
 
-    calculateSellingPrice();
-}
+        let table =
+            document.getElementById("bomTable");
 
+        let row = table.insertRow();
+
+        row.innerHTML = `
+            <td>${componentName}</td>
+            <td>₹${unitPrice}</td>
+            <td>${quantity}</td>
+            <td>₹${total}</td>
+            <td>
+                <button onclick="removeRow(this, ${total})">
+                    Remove
+                </button>
+            </td>
+        `;
+    }
+
+    function removeRow(button, total) {
+
+        let row = button.parentNode.parentNode;
+
+        row.remove();
+
+        grandTotal -= total;
+
+        updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+
+        document.getElementById("grandTotal").innerText =
+            "Grand Total: ₹" + grandTotal;
+
+        document.getElementById("dashboardTotal").innerText =
+            "₹" + grandTotal;
+
+        document.getElementById("componentCount").innerText =
+            bomItems.length;
+
+        document.getElementById("highestItem").innerText =
+            highestItemName;
+
+        calculateSellingPrice();
+    }
+
+    function calculateSellingPrice() {
+
+        let margin =
+            parseFloat(
+                document.getElementById("marginPercent").value
+            );
+
+        if (!margin) margin = 0;
+
+        let sellingPrice =
+            grandTotal + (grandTotal * margin / 100);
+
+        document.getElementById("sellingPrice").innerText =
+            "Selling Price: ₹" + sellingPrice.toFixed(2);
+    }
+
+    async function generatePDF() {
+
+        const response = await fetch("/generate_pdf", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(bomItems)
+        });
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+
+        a.href = url;
+
+        a.download = "BOM_Report.pdf";
+
+        a.click();
+    }
+
+    async function saveBOM() {
+
+        let projectName =
+            document.getElementById("projectName").value;
+
+        if (!projectName) {
+
+            alert("Enter project name");
+
+            return;
         }
 
-        function calculateSellingPrice() {
+        await fetch("/save_bom", {
 
-            let margin =
-                parseFloat(
-                    document.getElementById("marginPercent").value
-                );
+            method: "POST",
 
-            if (!margin) margin = 0;
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-            let sellingPrice =
-                grandTotal + (grandTotal * margin / 100);
+            body: JSON.stringify({
 
-            document.getElementById("sellingPrice").innerText =
-                "Selling Price: ₹" + sellingPrice.toFixed(2);
+                project_name: projectName,
+
+                bom_items: bomItems
+            })
+        });
+
+        alert("Project Saved");
+    }
+
+    async function loadBOM() {
+
+        let filename =
+            document.getElementById("savedProjects").value;
+
+        await fetch(`/load_bom/${filename}`);
+
+        location.reload();
+    }
+
+    function filterComponents() {
+
+        let input =
+            document.getElementById("searchBox")
+            .value
+            .toLowerCase();
+
+        let select =
+            document.getElementById("componentSelect");
+
+        let options = select.options;
+
+        for (let i = 0; i < options.length; i++) {
+
+            let text =
+                options[i].text.toLowerCase();
+
+            options[i].style.display =
+                text.includes(input) ? "" : "none";
         }
+    }
 
-        async function generatePDF() {
-
-            const response = await fetch("/generate_pdf", {
-
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify(bomItems)
-            });
-
-            const blob = await response.blob();
-
-            const url = window.URL.createObjectURL(blob);
-
-            const a = document.createElement("a");
-
-            a.href = url;
-
-            a.download = "BOM_Report.pdf";
-
-            a.click();
-        }
-
-        async function saveBOM() {
-
-            let projectName =
-                document.getElementById("projectName").value;
-
-            if (!projectName) {
-
-                alert("Enter project name");
-
-                return;
-            }
-
-            await fetch("/save_bom", {
-
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify({
-                    project_name: projectName,
-                    bom_items: bomItems
-                })
-            });
-
-            alert("Project Saved");
-        }
-
-        async function loadBOM() {
-
-            let filename =
-                document.getElementById("savedProjects").value;
-
-            const response =
-                await fetch(`/load_bom/${filename}`);
-
-            const data = await response.json();
-
-            location.reload();
-        }
-
-        function filterComponents() {
-
-            let input =
-                document.getElementById("searchBox")
-                .value
-                .toLowerCase();
-
-            let select =
-                document.getElementById("componentSelect");
-
-            let options = select.options;
-
-            for (let i = 0; i < options.length; i++) {
-
-                let text =
-                    options[i].text.toLowerCase();
-
-                options[i].style.display =
-                    text.includes(input) ? "" : "none";
-            }
-        }
-
-    </script>
+</script>
 
 
 </body>
